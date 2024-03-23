@@ -3,7 +3,6 @@ package com.example.book.ticket.service.impl;
 import com.example.book.ticket.domain.Ticket;
 import com.example.book.ticket.domain.TrainJourney;
 import com.example.book.ticket.domain.TrainSeat;
-import com.example.book.ticket.domain.TrainSection;
 import com.example.book.ticket.service.TicketService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -22,20 +21,18 @@ public class TicketServiceImpl implements TicketService {
 
     private final List<TrainJourney> trainJourneyList;
     private final List<Ticket> ticketsBooked;
-    private final List<TrainSection> trainSections;
     private final Map<String,List<TrainSeat>> trainSectionAndSeatMapBySectionName;
 
-    public TicketServiceImpl(List<TrainJourney> trainJourneyList, List<Ticket> ticketsBooked, List<TrainSection> trainSections, Map<String, List<TrainSeat>> trainSectionAndSeatMapBySectionName) {
+    public TicketServiceImpl(List<TrainJourney> trainJourneyList, List<Ticket> ticketsBooked, Map<String, List<TrainSeat>> trainSectionAndSeatMapBySectionName) {
         this.trainJourneyList = trainJourneyList;
         this.ticketsBooked = ticketsBooked;
-        this.trainSections = trainSections;
         this.trainSectionAndSeatMapBySectionName = trainSectionAndSeatMapBySectionName;
     }
 
     @Override
     public Ticket doBookTicketForUser(Ticket ticket) {
         if(Objects.nonNull(ticket)){
-            Optional<Ticket> isAlreadyBookedUser = ticketsBooked.stream().filter(ticketBooked -> StringUtils.equalsIgnoreCase(ticketBooked.getUser().getEmail(),ticket.getUser().getEmail())).findAny();
+            Optional<Ticket> isAlreadyBookedUser = CollectionUtils.isNotEmpty(ticketsBooked) ? ticketsBooked.stream().filter(ticketBooked -> StringUtils.equalsIgnoreCase(ticketBooked.getUser().getEmail(),ticket.getUser().getEmail())).findAny() : Optional.empty();
             if(isAlreadyBookedUser.isEmpty()) {
                 Optional<TrainJourney> trainJourneyToBook = this.trainJourneyList.stream().filter(trainJourney -> StringUtils.equalsIgnoreCase(trainJourney.getFrom(), ticket.getTrainJourney().getFrom()) && StringUtils.equalsIgnoreCase(trainJourney.getTo(), ticket.getTrainJourney().getTo())).findAny();
                 bookTicketForUser(ticket, trainJourneyToBook);
@@ -122,7 +119,6 @@ public class TicketServiceImpl implements TicketService {
                                     .ifPresent(seat -> seat.setIsBooked(false));
                         }
                         break;
-
                     }
                 }
             }

@@ -10,7 +10,7 @@ public class ResponseUtils {
     }
 
     public static ResponseEntity<HttpStatusResponse> prepareCreatedSuccessResponse(String responseMessage, Object data){
-        return new ResponseEntity<>(new HttpStatusResponse(HttpStatus.OK.value(),responseMessage,data), HttpStatus.CREATED);
+        return new ResponseEntity<>(new HttpStatusResponse(HttpStatus.CREATED.value(),responseMessage,data), HttpStatus.CREATED);
     }
 
     public static ResponseEntity<HttpStatusResponse> prepareSuccessResponse(String responseMessage, Object data){

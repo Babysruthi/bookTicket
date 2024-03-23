@@ -2,9 +2,8 @@ package com.example.book.ticket.controller;
 
 import com.example.book.ticket.constants.RestURIConstants;
 import com.example.book.ticket.domain.Ticket;
-import com.example.book.ticket.domain.TrainJourney;
-import com.example.book.ticket.domain.User;
 import com.example.book.ticket.service.TicketService;
+import com.example.book.ticket.utils.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +37,8 @@ class TicketControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public static final String TEST_USER_MAIL = "sruthi@gmail.com";
+
 
     @BeforeEach
     void setUp(){
@@ -47,9 +48,9 @@ class TicketControllerTest {
 
     @Test
     void bookTicketForAnUserOnSuccess() throws Exception{
-        Mockito.when(ticketService.doBookTicketForUser(Mockito.any())).thenReturn(getTicketResponse());
+        Mockito.when(ticketService.doBookTicketForUser(Mockito.any())).thenReturn(TestUtils.getTicketResponse());
         this.mockMvc.perform(RestDocumentationRequestBuilders.post(BASE_URL + RestURIConstants.BOOK).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(getTicket())))
+                        .content(objectMapper.writeValueAsString(TestUtils.getTicket())))
                         .andExpect(status().isCreated());
     }
 
@@ -57,25 +58,25 @@ class TicketControllerTest {
     void bookTicketForAlreadyBookedUser() throws Exception{
         Mockito.when(ticketService.doBookTicketForUser(Mockito.any())).thenReturn(null);
         this.mockMvc.perform(RestDocumentationRequestBuilders.post(BASE_URL + RestURIConstants.BOOK).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(getTicket())))
+                        .content(objectMapper.writeValueAsString(TestUtils.getTicket())))
                 .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
     void bookTicketIfNoAvailableSeats() throws Exception{
-        Ticket ticket = getTicketResponse();
+        Ticket ticket = TestUtils.getTicketResponse();
         ticket.getTrainJourney().setSeatNo(null);
         Mockito.when(ticketService.doBookTicketForUser(Mockito.any())).thenReturn(ticket);
         this.mockMvc.perform(RestDocumentationRequestBuilders.post(BASE_URL + RestURIConstants.BOOK).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(getTicket())))
+                        .content(objectMapper.writeValueAsString(TestUtils.getTicket())))
                 .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
     void doGetBookedUserDetails() throws Exception{
-        Mockito.when(ticketService.doGetBookedTicketDetailByMailId(Mockito.anyString())).thenReturn(getTicketResponse());
+        Mockito.when(ticketService.doGetBookedTicketDetailByMailId(Mockito.anyString())).thenReturn(TestUtils.getTicketResponse());
         this.mockMvc.perform(RestDocumentationRequestBuilders.post(BASE_URL + RestURIConstants.BOOKED_USER_DETAILS).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString("sruthi@gmail.com")))
+                        .content(objectMapper.writeValueAsString(TEST_USER_MAIL)))
                 .andExpect(status().isOk());
     }
 
@@ -83,13 +84,13 @@ class TicketControllerTest {
     void doGetDetailsForNotBookedUser() throws Exception{
         Mockito.when(ticketService.doGetBookedTicketDetailByMailId(Mockito.anyString())).thenReturn(null);
         this.mockMvc.perform(RestDocumentationRequestBuilders.post(BASE_URL + RestURIConstants.BOOKED_USER_DETAILS).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString("sruthi@gmail.com")))
+                        .content(objectMapper.writeValueAsString(TEST_USER_MAIL)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void doGetDetailsForBookedUserSectionWise() throws Exception{
-        Mockito.when(ticketService.doGetBookedTicketDetailBySectionName(Mockito.anyString())).thenReturn(List.of(getTicketResponse()));
+        Mockito.when(ticketService.doGetBookedTicketDetailBySectionName(Mockito.anyString())).thenReturn(List.of(TestUtils.getTicketResponse()));
         this.mockMvc.perform(RestDocumentationRequestBuilders.get(BASE_URL + RestURIConstants.BOOKED_USER_DETAILS_SECTION_WISE.replace("{sectionName}","Section A")).contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
@@ -103,9 +104,9 @@ class TicketControllerTest {
 
     @Test
     void doRemoveUserForBookedUser() throws Exception{
-        Mockito.when(ticketService.doRemoveUserFromTrain(Mockito.anyString())).thenReturn(getTicketResponse());
+        Mockito.when(ticketService.doRemoveUserFromTrain(Mockito.anyString())).thenReturn(TestUtils.getTicketResponse());
         this.mockMvc.perform(RestDocumentationRequestBuilders.delete(BASE_URL + RestURIConstants.REMOVE_USER).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString("sruthi@gmail.com")))
+                        .content(objectMapper.writeValueAsString(TEST_USER_MAIL)))
                 .andExpect(status().isOk());
     }
 
@@ -113,24 +114,23 @@ class TicketControllerTest {
     void doRemoveUserForNotBookedUser() throws Exception{
         Mockito.when(ticketService.doRemoveUserFromTrain(Mockito.anyString())).thenReturn(null);
         this.mockMvc.perform(RestDocumentationRequestBuilders.delete(BASE_URL + RestURIConstants.REMOVE_USER).contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString("sruthi@gmail.com")))
+                        .content(objectMapper.writeValueAsString(TEST_USER_MAIL)))
                 .andExpect(status().isNoContent());
     }
 
-    private Ticket getTicketResponse() {
-        Ticket ticket = getTicket();
-        ticket.getTrainJourney().setSeatNo(10L);
-        ticket.getTrainJourney().setSectionName("Section A");
-        return ticket;
+    @Test
+    void doModifyUserSeatIfBooked() throws Exception{
+        Mockito.when(ticketService.doUpdateUserSeatDetails(Mockito.anyString())).thenReturn(TestUtils.getTicketResponse());
+        this.mockMvc.perform(RestDocumentationRequestBuilders.put(BASE_URL + RestURIConstants.MODIFY_USER_BOOKING_DETAILS).contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TEST_USER_MAIL)))
+                .andExpect(status().isOk());
     }
 
-    private Ticket getTicket() {
-        Ticket ticket = new Ticket();
-        User user = new User("sruthi","sekar","sruthi@gmail.com");
-        TrainJourney trainJourney = new TrainJourney("London","France","$5");
-        ticket.setUser(user);
-        trainJourney.setFareInDollars(null);
-        ticket.setTrainJourney(trainJourney);
-        return ticket;
+    @Test
+    void doModifyUserSeatIfNotBooked() throws Exception{
+        Mockito.when(ticketService.doUpdateUserSeatDetails(Mockito.anyString())).thenReturn(null);
+        this.mockMvc.perform(RestDocumentationRequestBuilders.put(BASE_URL + RestURIConstants.MODIFY_USER_BOOKING_DETAILS).contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(TEST_USER_MAIL)))
+                .andExpect(status().isNoContent());
     }
 }
